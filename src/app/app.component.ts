@@ -21,8 +21,17 @@ export class AppComponent {
   }
   handleImage(webcamImage: WebcamImage): void {
     console.info('Saved webcam image', webcamImage);
+    const formData: FormData = new FormData();
     this.webcamImage = webcamImage;
-    this.httpClient.post('http://localhost:8080/image/upload', this.webcamImage.imageAsDataUrl, { observe: 'response' })
+    const rawData = atob(this.webcamImage.imageAsBase64);
+    const bytes = new Array(rawData.length);
+    for (let x = 0; x < rawData.length; x++) {
+      bytes[x] = rawData.charCodeAt(x);
+    }
+    const arr = new Uint8Array(bytes);
+    const blob = new Blob([arr], {type: 'image/png'});
+    formData.append('image', blob, 'image');
+    this.httpClient.post('http://localhost:8080/image/upload', formData, { observe: 'response' })
       .subscribe((response) => {
           if (response.status === 200) {
             this.message = 'Image uploaded successfully';
